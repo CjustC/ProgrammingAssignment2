@@ -1,15 +1,88 @@
-## Put comments here that give an overall description of what your
-## functions do
+## The purpose of these two functions are to store the matrix and the
+## inverse of a matrix for repeated use without having to 
+## recalculate the matrix inversion multiple times.
 
-## Write a short comment describing this function
+## The 'makeCacheMatrix' function creates a special "matrix" 
+## containg four nested functions: 'set', 'get', 'setInverse' & 'getInverse'. 
+##   - 'set' is used to assign a matrix to the variable 
+##   - 'get' is used to recall the existing matrix 
+##   - 'setInverse' is used to assign an inverted matrix to the variable
+##   - 'getInverse' is used to recall the stored inverted matrix.
 
-makeCacheMatrix <- function(x = matrix()) {
+## This function returns a list of values from the nested funcitons 
+## that will be used by 'cacheSolve' to get or set the inverted matrix in cache.
 
+makeCacheMatrix <- function(storeMatrix = matrix()) {
+     
+     ## initialize the variable to NULL. This variable will store the cached value.
+     invMatrix <- NULL
+     
+     ## initialize the 'set' function, so a matrix can be stored
+     set <- function(inputMatrix) {
+          
+          ## assign the input matrix storage
+          storeMatrix <<- inputMatrix
+          
+          ## remove any record of previous inverted matrix
+          invMatrix <<- NULL
+     }
+     
+     ## initialize the 'get' function, so the stored matrix can be recalled
+     get <- function() storeMatrix  
+     
+     ## initialize the 'setInverse' function, so the matrix inversion can be stored
+     setInverse <- function(inverse) invMatrix <<- inverse  
+     
+     ## initialize the 'getinv' function, so the matrix inversion can be recalled
+     getInverse <- function() invMatrix
+     
+     ## specify the stored commands
+     list(set = set, 
+          get = get,
+          setInverse= setInverse,
+          getInverse = getInverse)
 }
 
+## This function examines a cached matrix and runs the 'solve' command on it. 
+## This function requires the matrix to be stored in the 'makeCacheMatrix' function prior to use.
 
-## Write a short comment describing this function
+## This function 1st checks to see if the cached matrix is square. If the matrix is not square, 
+## an Error message, "Cannot invert matrix, matrix must be square to invert." is displayed.
+## If the matrix is square the function will check to see if the inverse of the matrix is
+## stored in 'inputMatrix$getInvers' (inverted matrix stored in cache).
+## If the inverted matrix does not exist then the 'cacheSolve' function
+## retrieves the inverse from 'inputMatrix$get' (matrix stored in cache before inversion).
+## If the function cannot retrieve a cached value then the funciton will use the results from 
+## the 'makeCacheMatrix' and compute the inverse using the 'solve()' function.
+## The function will return the inverse of the matrix.
 
-cacheSolve <- function(x, ...) {
-        ## Return a matrix that is the inverse of 'x'
+cacheSolve <- function(inputMatrix, ...) {
+     
+     ## check to make sure that the cached matrix is square (only square matrices can be inverted)     
+     if(nrow(inputMatrix$get()) == ncol(inputMatrix$get())) {
+          
+          ## check if there is a cached inverted matrix
+          currInverse <- inputMatrix$getInverse()
+          
+          # if the inverted matrix is stored in cache, send a message "getting cached data"
+          if(!is.null(currInverse)) {
+               message("getting cached data")
+               return(currInverse)
+               
+          } else {
+               ## get the cached matrix (the cached Inverted matrix was not found)
+               data <- inputMatrix$get()
+               
+               ## invert the cached matrix using the solve() function
+               currentInverse <- solve(data, ...)
+               
+               ## set inverted matrix in the cached matrix
+               inputMatrix$setInverse(currentInverse)
+               
+               ## display the inverted matrix
+               currInverse
+          }
+     }else { ## If the cached matrix is not square, return an error
+          message("ERROR: Cannot invert matrix, matrix must be square to invert.")
+     }
 }
